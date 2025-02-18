@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Timer, ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +20,7 @@ const Index = () => {
   const [activeSubject, setActiveSubject] = useState("Mathematics");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState("01:54:11");
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [allQuestions, setAllQuestions] = useState<Question[]>([]);
   const [userAnswers, setUserAnswers] = useState<UserAnswer[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [results, setResults] = useState({
@@ -29,32 +28,30 @@ const Index = () => {
     correctAnswers: 0,
     wrongAnswers: 0,
     subjectWise: {
-      Physics: { correct: 0, total: 5 },
-      Chemistry: { correct: 0, total: 5 },
-      Mathematics: { correct: 0, total: 5 },
+      Physics: { correct: 0, total: 0 },
+      Chemistry: { correct: 0, total: 0 },
+      Mathematics: { correct: 0, total: 0 },
     },
   });
 
-  // Fetch questions for the current subject
   useEffect(() => {
-    const fetchQuestions = async () => {
+    const fetchAllQuestions = async () => {
       const { data, error } = await supabase
         .from("questions")
-        .select("*")
-        .eq("subject", activeSubject);
+        .select("*");
 
       if (error) {
         console.error("Error fetching questions:", error);
         return;
       }
 
-      setQuestions(data || []);
-      setCurrentQuestionIndex(0);
+      setAllQuestions(data || []);
     };
 
-    fetchQuestions();
-  }, [activeSubject]);
+    fetchAllQuestions();
+  }, []);
 
+  const questions = allQuestions.filter(q => q.subject === activeSubject);
   const currentQuestion = questions[currentQuestionIndex];
 
   const handleAnswerSelect = (optionIndex: number) => {
@@ -75,12 +72,16 @@ const Index = () => {
     let correct = 0;
     let wrong = 0;
     const subjectResults = {
-      Physics: { correct: 0, total: 5 },
-      Chemistry: { correct: 0, total: 5 },
-      Mathematics: { correct: 0, total: 5 },
+      Physics: { correct: 0, total: 0 },
+      Chemistry: { correct: 0, total: 0 },
+      Mathematics: { correct: 0, total: 0 },
     };
 
-    questions.forEach((question) => {
+    allQuestions.forEach(question => {
+      subjectResults[question.subject as keyof typeof subjectResults].total++;
+    });
+
+    allQuestions.forEach((question) => {
       const answer = userAnswers.find((a) => a.questionId === question.id);
       if (answer) {
         if (answer.selectedOption === question.correct_answer - 1) {
@@ -103,15 +104,18 @@ const Index = () => {
   };
 
   const progress = {
-    attempted: userAnswers.length,
+    attempted: userAnswers.filter(answer => 
+      questions.some(q => q.id === answer.questionId)
+    ).length,
     marked: 0,
-    notAnswered: questions.length - userAnswers.length,
+    notAnswered: questions.length - userAnswers.filter(answer => 
+      questions.some(q => q.id === answer.questionId)
+    ).length,
     notVisited: 0,
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-blue-700">JEE Prep Master</h1>
@@ -127,7 +131,6 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Subject Tabs */}
       <div className="border-b bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex space-x-8" aria-label="Subjects">
@@ -139,7 +142,10 @@ const Index = () => {
                     ? "border-blue-500 text-blue-600"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                onClick={() => setActiveSubject(subject)}
+                onClick={() => {
+                  setActiveSubject(subject);
+                  setCurrentQuestionIndex(0);
+                }}
               >
                 {subject}
               </button>
@@ -148,10 +154,8 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-12 gap-8">
-          {/* Left Sidebar */}
           <div className="col-span-3 bg-white rounded-lg shadow p-6">
             <div className="flex items-center space-x-4 mb-6">
               <div className="w-12 h-12 bg-gray-200 rounded-full" />
@@ -164,7 +168,6 @@ const Index = () => {
               Test in Progress
             </div>
 
-            {/* Progress */}
             <div className="space-y-4 mb-8">
               <h4 className="font-medium">{activeSubject} Progress</h4>
               <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -195,7 +198,6 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Question Palette */}
             <div>
               <h4 className="font-medium mb-4">Question Palette</h4>
               <div className="grid grid-cols-5 gap-2">
@@ -223,7 +225,6 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Main Question Area */}
           <div className="col-span-9 bg-white rounded-lg shadow p-6">
             {currentQuestion && (
               <>
@@ -287,7 +288,6 @@ const Index = () => {
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="fixed bottom-0 left-0 right-0 bg-white border-t">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <button className="flex items-center gap-2 text-blue-600">
@@ -305,7 +305,6 @@ const Index = () => {
         </div>
       </footer>
 
-      {/* Results Dialog */}
       {showResults && (
         <Dialog open={showResults} onOpenChange={setShowResults}>
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
