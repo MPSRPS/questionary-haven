@@ -1,25 +1,112 @@
+import { useState, useEffect } from "react";
+import { Timer, ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Dialog } from "@/components/ui/dialog";
 
-import { useState } from "react";
-import { Timer, ArrowLeft, ArrowRight } from "lucide-react";
+interface Question {
+  id: number;
+  text: string;
+  options: string[];
+  subject: string;
+  correct_answer: number;
+}
+
+interface UserAnswer {
+  questionId: number;
+  selectedOption: number | null;
+}
 
 const Index = () => {
   const [activeSubject, setActiveSubject] = useState("Mathematics");
-  const [currentQuestion, setCurrentQuestion] = useState(6);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState("01:54:11");
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [userAnswers, setUserAnswers] = useState<UserAnswer[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const [results, setResults] = useState({
+    totalScore: 0,
+    correctAnswers: 0,
+    wrongAnswers: 0,
+    subjectWise: {
+      Physics: { correct: 0, total: 5 },
+      Chemistry: { correct: 0, total: 5 },
+      Mathematics: { correct: 0, total: 5 },
+    },
+  });
 
-  // Mock data for the progress section
-  const progress = {
-    attempted: 6,
-    marked: 0,
-    notAnswered: 0,
-    notVisited: 19,
+  // Fetch questions for the current subject
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      const { data, error } = await supabase
+        .from("questions")
+        .select("*")
+        .eq("subject", activeSubject);
+
+      if (error) {
+        console.error("Error fetching questions:", error);
+        return;
+      }
+
+      setQuestions(data || []);
+      setCurrentQuestionIndex(0);
+    };
+
+    fetchQuestions();
+  }, [activeSubject]);
+
+  const currentQuestion = questions[currentQuestionIndex];
+
+  const handleAnswerSelect = (optionIndex: number) => {
+    setUserAnswers((prev) => {
+      const existing = prev.find((a) => a.questionId === currentQuestion.id);
+      if (existing) {
+        return prev.map((a) =>
+          a.questionId === currentQuestion.id
+            ? { ...a, selectedOption: optionIndex }
+            : a
+        );
+      }
+      return [...prev, { questionId: currentQuestion.id, selectedOption: optionIndex }];
+    });
   };
 
-  const subjects = ["Physics", "Chemistry", "Mathematics"];
-  const totalQuestions = 25;
+  const calculateResults = () => {
+    let correct = 0;
+    let wrong = 0;
+    const subjectResults = {
+      Physics: { correct: 0, total: 5 },
+      Chemistry: { correct: 0, total: 5 },
+      Mathematics: { correct: 0, total: 5 },
+    };
 
-  // Generate question numbers array
-  const questionNumbers = Array.from({ length: totalQuestions }, (_, i) => i + 1);
+    questions.forEach((question) => {
+      const answer = userAnswers.find((a) => a.questionId === question.id);
+      if (answer) {
+        if (answer.selectedOption === question.correct_answer - 1) {
+          correct++;
+          subjectResults[question.subject as keyof typeof subjectResults].correct++;
+        } else {
+          wrong++;
+        }
+      }
+    });
+
+    const totalScore = correct * 4 - wrong;
+    setResults({
+      totalScore,
+      correctAnswers: correct,
+      wrongAnswers: wrong,
+      subjectWise: subjectResults,
+    });
+    setShowResults(true);
+  };
+
+  const progress = {
+    attempted: userAnswers.length,
+    marked: 0,
+    notAnswered: questions.length - userAnswers.length,
+    notVisited: 0,
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -43,7 +130,7 @@ const Index = () => {
       <div className="border-b bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex space-x-8" aria-label="Subjects">
-            {subjects.map((subject) => (
+            {["Physics", "Chemistry", "Mathematics"].map((subject) => (
               <button
                 key={subject}
                 className={`${
@@ -106,17 +193,22 @@ const Index = () => {
             <div>
               <h4 className="font-medium mb-4">Question Palette</h4>
               <div className="grid grid-cols-5 gap-2">
-                {questionNumbers.map((num) => (
+                {Array.from({ length: 25 }, (_, i) => i + 1).map((num) => (
                   <button
                     key={num}
                     className={`${
-                      num === currentQuestion
+                      num === currentQuestionIndex + 1
                         ? "bg-green-500 text-white"
-                        : num < currentQuestion
+                        : userAnswers.some((answer) => answer.questionId === questions[num - 1]?.id)
                         ? "bg-gray-100"
                         : "bg-gray-200"
                     } rounded p-2 text-sm font-medium`}
-                    onClick={() => setCurrentQuestion(num)}
+                    onClick={() =>
+                      setCurrentQuestionIndex(
+                        questions.findIndex((q) => q.id === questions[num - 1]?.id)
+                      )
+                    }
+                    disabled={!questions[num - 1]}
                   >
                     {num}
                   </button>
@@ -127,42 +219,64 @@ const Index = () => {
 
           {/* Main Question Area */}
           <div className="col-span-9 bg-white rounded-lg shadow p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-medium">Question {currentQuestion}</h2>
-              <div className="flex gap-2">
-                <span className="text-green-600">+4</span>
-                <span className="text-red-600">-1</span>
-              </div>
-            </div>
+            {currentQuestion && (
+              <>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-medium">
+                    Question {currentQuestionIndex + 1}
+                  </h2>
+                  <div className="flex gap-2">
+                    <span className="text-green-600">+4</span>
+                    <span className="text-red-600">-1</span>
+                  </div>
+                </div>
 
-            {/* Question content would go here */}
-            <div className="min-h-[400px]">
-              {/* Question content placeholder */}
-            </div>
+                <div className="space-y-6">
+                  <p className="text-gray-800">{currentQuestion.text}</p>
+                  <div className="space-y-3">
+                    {currentQuestion.options.map((option, idx) => (
+                      <button
+                        key={idx}
+                        className={`w-full text-left p-4 rounded-lg border ${
+                          userAnswers.find((a) => a.questionId === currentQuestion.id)
+                            ?.selectedOption === idx
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-gray-200 hover:border-blue-200"
+                        }`}
+                        onClick={() => handleAnswerSelect(idx)}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-            {/* Navigation Buttons */}
-            <div className="flex justify-between mt-8">
-              <button
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                onClick={() => setCurrentQuestion((prev) => Math.max(1, prev - 1))}
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Previous
-              </button>
-              <button className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
-                Clear Response
-              </button>
-              <button className="px-6 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200">
-                Mark for Review & Next
-              </button>
-              <button
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                onClick={() => setCurrentQuestion((prev) => Math.min(totalQuestions, prev + 1))}
-              >
-                Save & Next
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
+                <div className="flex justify-between mt-8">
+                  <button
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    onClick={() =>
+                      setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))
+                    }
+                    disabled={currentQuestionIndex === 0}
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Previous
+                  </button>
+                  <button
+                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                    onClick={() =>
+                      setCurrentQuestionIndex((prev) =>
+                        Math.min(questions.length - 1, prev + 1)
+                      )
+                    }
+                    disabled={currentQuestionIndex === questions.length - 1}
+                  >
+                    Save & Next
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </main>
@@ -176,11 +290,61 @@ const Index = () => {
             </span>
             Instructions
           </button>
-          <button className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+          <button
+            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            onClick={calculateResults}
+          >
             Submit Test
           </button>
         </div>
       </footer>
+
+      {/* Results Dialog */}
+      {showResults && (
+        <Dialog open={showResults} onOpenChange={setShowResults}>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="bg-white rounded-lg p-8 max-w-md w-full">
+              <div className="text-center mb-6">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Check className="w-6 h-6 text-green-600" />
+                </div>
+                <h2 className="text-2xl font-bold mb-2">Test Completed!</h2>
+                <div className="text-4xl font-bold text-blue-600 mb-4">
+                  {results.totalScore}
+                </div>
+                <p className="text-gray-600">Total Score</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                <div className="bg-green-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-green-600">
+                    {results.correctAnswers}
+                  </div>
+                  <p className="text-sm text-green-800">Correct Answers</p>
+                </div>
+                <div className="bg-red-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-red-600">
+                    {results.wrongAnswers}
+                  </div>
+                  <p className="text-sm text-red-800">Wrong Answers</p>
+                </div>
+              </div>
+
+              <h3 className="font-bold mb-4">Subject-wise Performance</h3>
+              <div className="space-y-4">
+                {Object.entries(results.subjectWise).map(([subject, data]) => (
+                  <div key={subject} className="flex justify-between items-center">
+                    <span>{subject}</span>
+                    <span className="text-gray-600">
+                      {data.correct} / {data.total} correct
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Dialog>
+      )}
     </div>
   );
 };
