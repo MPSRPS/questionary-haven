@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Timer, ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -165,9 +166,14 @@ const Index = () => {
 
             {/* Progress */}
             <div className="space-y-4 mb-8">
-              <h4 className="font-medium">Mathematics Progress</h4>
+              <h4 className="font-medium">{activeSubject} Progress</h4>
               <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div className="h-full bg-green-500 w-1/4" />
+                <div 
+                  className="h-full bg-green-500" 
+                  style={{
+                    width: `${(progress.attempted / questions.length) * 100}%`
+                  }}
+                />
               </div>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div className="flex items-center gap-2">
