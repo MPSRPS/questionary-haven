@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Timer, ArrowLeft, ArrowRight, Check, Flag, X, Maximize2, Minimize2 } from "lucide-react";
+import { Timer, ArrowLeft, ArrowRight, Check, Flag, X, Maximize2, Minimize2, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog } from "@/components/ui/dialog";
 
@@ -37,7 +37,6 @@ const Index = () => {
   });
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Questions filter
   const questions = allQuestions.filter(q => q.subject === activeSubject);
   const currentQuestion = questions[currentQuestionIndex];
 
@@ -119,7 +118,6 @@ const Index = () => {
     const answer = userAnswers.find((a) => a.questionId === questionId);
     const isVisited = visitedQuestions.has(questionId);
 
-    // Not visited yet - should be gray
     if (!isVisited) {
       return {
         bgColor: "bg-gray-200",
@@ -128,7 +126,6 @@ const Index = () => {
       };
     }
 
-    // Visited but no answer - should be red
     if (!answer || answer.selectedOption === null) {
       return {
         bgColor: answer?.isMarkedForReview ? "bg-purple-400" : "bg-red-500",
@@ -137,7 +134,6 @@ const Index = () => {
       };
     }
 
-    // Answered and marked for review - should be purple with green dot
     if (answer.isMarkedForReview) {
       return {
         bgColor: "bg-purple-400",
@@ -146,7 +142,6 @@ const Index = () => {
       };
     }
 
-    // Answered - should be green
     return {
       bgColor: "bg-green-500",
       textColor: "text-white",
@@ -264,21 +259,25 @@ const Index = () => {
 
       <div className="max-w-screen-2xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[320px,1fr] gap-6">
         <div className="bg-white rounded-lg shadow lg:sticky lg:top-[120px] self-start">
-          <div className="p-4">
-            <div className="flex items-center gap-4 mb-2">
-              <div className="w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 p-[2px]">
-                <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
-                  <span className="text-blue-600 font-medium">JD</span>
-                </div>
-              </div>
-              <div>
-                <h3 className="font-medium">John Doe</h3>
-                <p className="text-sm text-gray-500 mb-2">Roll No: JEE2024001</p>
-                <div className="bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded-full inline-block">
-                  Test in Progress
-                </div>
+          <div className="relative w-full h-[95px] bg-gray-100 border border-gray-300 shadow-md rounded-md p-4 flex items-center">
+            <div className="absolute top-[13px] left-[10px] w-[70px] h-[70px] rounded-full bg-gradient-to-r from-blue-500 to-purple-500 p-1 shadow-md">
+              <div className="w-full h-full bg-white flex items-center justify-center rounded-full">
+                <User className="w-10 h-10 text-gray-500" />
               </div>
             </div>
+
+            <div className="absolute top-[13px] left-[101px]">
+              <h3 className="text-lg font-medium text-gray-800 leading-[26px]">
+                John Doe
+              </h3>
+              <p className="text-sm text-gray-500 leading-[22px]">
+                Roll No: JEE2024001
+              </p>
+            </div>
+
+            <button className="absolute top-[65px] left-[101px] w-[95px] h-[23px] text-green-800 text-xs font-medium bg-green-100 hover:bg-green-200 active:bg-green-300 flex items-center justify-center rounded-full">
+              Test in Progress
+            </button>
           </div>
 
           <div className="bg-white rounded-lg shadow">
