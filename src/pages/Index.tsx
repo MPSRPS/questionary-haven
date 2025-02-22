@@ -37,7 +37,7 @@ const Index = () => {
   });
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Move questions filter here, before it's used in useEffect
+  // Questions filter
   const questions = allQuestions.filter(q => q.subject === activeSubject);
   const currentQuestion = questions[currentQuestionIndex];
 
@@ -55,13 +55,6 @@ const Index = () => {
 
     return () => clearInterval(timer);
   }, []);
-
-  const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const remainingSeconds = seconds % 60;
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
 
   useEffect(() => {
     const fetchAllQuestions = async () => {
@@ -81,7 +74,9 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
-    setVisitedQuestions(prev => new Set([...prev, questions[currentQuestionIndex]?.id].filter(Boolean)));
+    if (questions[currentQuestionIndex]?.id) {
+      setVisitedQuestions(prev => new Set([...prev, questions[currentQuestionIndex].id]));
+    }
   }, [currentQuestionIndex, questions]);
 
   const handleAnswerSelect = (optionIndex: number) => {
@@ -124,12 +119,39 @@ const Index = () => {
     const answer = userAnswers.find((a) => a.questionId === questionId);
     const isVisited = visitedQuestions.has(questionId);
 
-    if (!isVisited) return "not-visited";
-    if (!answer || answer.selectedOption === null) return "not-answered";
-    if (answer.isMarkedForReview) {
-      return "marked-answered";
+    // Not visited yet - should be gray
+    if (!isVisited) {
+      return {
+        bgColor: "bg-gray-200",
+        textColor: "text-gray-600",
+        showGreenDot: false
+      };
     }
-    return "answered";
+
+    // Visited but no answer - should be red
+    if (!answer || answer.selectedOption === null) {
+      return {
+        bgColor: answer?.isMarkedForReview ? "bg-purple-400" : "bg-red-500",
+        textColor: "text-white",
+        showGreenDot: false
+      };
+    }
+
+    // Answered and marked for review - should be purple with green dot
+    if (answer.isMarkedForReview) {
+      return {
+        bgColor: "bg-purple-400",
+        textColor: "text-white",
+        showGreenDot: answer.selectedOption !== null
+      };
+    }
+
+    // Answered - should be green
+    return {
+      bgColor: "bg-green-500",
+      textColor: "text-white",
+      showGreenDot: false
+    };
   };
 
   const calculateProgress = (subject: string) => {
@@ -173,6 +195,13 @@ const Index = () => {
       subjectWise: subjectResults,
     });
     setShowResults(true);
+  };
+
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
   const toggleFullscreen = () => {
@@ -295,26 +324,19 @@ const Index = () => {
               <div className="grid grid-cols-5 gap-2">
                 {Array.from({ length: 25 }, (_, i) => {
                   const question = questions[i];
-                  const status = question ? getQuestionStatus(question.id) : "not-visited";
-                  const answer = userAnswers.find(a => question && a.questionId === question.id);
-                  const isVisited = question && visitedQuestions.has(question.id);
-                  const isUnanswered = isVisited && (!answer || answer.selectedOption === null);
-                  
-                  let bgColor = "bg-gray-200";
-                  let textColor = "text-gray-600";
-                  
-                  if (question) {
-                    if (isUnanswered) {
-                      bgColor = "bg-red-500";
-                      textColor = "text-white";
-                    } else if (answer?.isMarkedForReview) {
-                      bgColor = "bg-purple-400";
-                      textColor = "text-white";
-                    } else if (answer?.selectedOption !== null) {
-                      bgColor = "bg-green-500";
-                      textColor = "text-white";
-                    }
+                  if (!question) {
+                    return (
+                      <button
+                        key={i}
+                        className="w-full aspect-square rounded text-sm font-medium bg-gray-200 text-gray-600"
+                        disabled
+                      >
+                        {i + 1}
+                      </button>
+                    );
                   }
+
+                  const status = getQuestionStatus(question.id);
 
                   return (
                     <button
@@ -322,13 +344,12 @@ const Index = () => {
                       className={`
                         relative w-full aspect-square rounded text-sm font-medium transition-colors
                         ${i === currentQuestionIndex ? "ring-2 ring-blue-500" : ""}
-                        ${bgColor} ${textColor}
+                        ${status.bgColor} ${status.textColor}
                       `}
-                      onClick={() => question && setCurrentQuestionIndex(i)}
-                      disabled={!question}
+                      onClick={() => setCurrentQuestionIndex(i)}
                     >
                       {i + 1}
-                      {answer?.isMarkedForReview && answer.selectedOption !== null && (
+                      {status.showGreenDot && (
                         <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white" />
                       )}
                     </button>
