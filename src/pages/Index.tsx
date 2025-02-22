@@ -23,6 +23,7 @@ const Index = () => {
   const [timeLeft, setTimeLeft] = useState(6900);
   const [allQuestions, setAllQuestions] = useState<Question[]>([]);
   const [userAnswers, setUserAnswers] = useState<UserAnswer[]>([]);
+  const [visitedQuestions, setVisitedQuestions] = useState<Set<number>>(new Set());
   const [showResults, setShowResults] = useState(false);
   const [results, setResults] = useState({
     totalScore: 0,
@@ -75,6 +76,10 @@ const Index = () => {
     fetchAllQuestions();
   }, []);
 
+  useEffect(() => {
+    setVisitedQuestions(prev => new Set([...prev, questions[currentQuestionIndex]?.id].filter(Boolean)));
+  }, [currentQuestionIndex, questions]);
+
   const questions = allQuestions.filter(q => q.subject === activeSubject);
   const currentQuestion = questions[currentQuestionIndex];
 
@@ -116,6 +121,9 @@ const Index = () => {
 
   const getQuestionStatus = (questionId: number) => {
     const answer = userAnswers.find((a) => a.questionId === questionId);
+    const isVisited = visitedQuestions.has(questionId);
+
+    if (!isVisited) return "not-visited";
     if (!answer || answer.selectedOption === null) return "not-answered";
     if (answer.isMarkedForReview) {
       return "marked-answered";
@@ -288,7 +296,8 @@ const Index = () => {
                   const question = questions[i];
                   const status = question ? getQuestionStatus(question.id) : "not-visited";
                   const answer = userAnswers.find(a => question && a.questionId === question.id);
-                  const isUnanswered = !answer || answer.selectedOption === null;
+                  const isVisited = question && visitedQuestions.has(question.id);
+                  const isUnanswered = isVisited && (!answer || answer.selectedOption === null);
                   
                   let bgColor = "bg-gray-200";
                   let textColor = "text-gray-600";
@@ -300,7 +309,7 @@ const Index = () => {
                     } else if (answer?.isMarkedForReview) {
                       bgColor = "bg-purple-400";
                       textColor = "text-white";
-                    } else {
+                    } else if (answer?.selectedOption !== null) {
                       bgColor = "bg-green-500";
                       textColor = "text-white";
                     }
