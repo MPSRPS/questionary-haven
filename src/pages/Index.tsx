@@ -37,6 +37,10 @@ const Index = () => {
   });
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // Move questions filter here, before it's used in useEffect
+  const questions = allQuestions.filter(q => q.subject === activeSubject);
+  const currentQuestion = questions[currentQuestionIndex];
+
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
@@ -79,9 +83,6 @@ const Index = () => {
   useEffect(() => {
     setVisitedQuestions(prev => new Set([...prev, questions[currentQuestionIndex]?.id].filter(Boolean)));
   }, [currentQuestionIndex, questions]);
-
-  const questions = allQuestions.filter(q => q.subject === activeSubject);
-  const currentQuestion = questions[currentQuestionIndex];
 
   const handleAnswerSelect = (optionIndex: number) => {
     setUserAnswers((prev) => {
