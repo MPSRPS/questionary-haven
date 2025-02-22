@@ -116,17 +116,17 @@ const Index = () => {
 
   const getQuestionStatus = (questionId: number) => {
     const answer = userAnswers.find((a) => a.questionId === questionId);
-    if (!answer) return "not-visited";
+    if (!answer || answer.selectedOption === null) return "not-answered";
     if (answer.isMarkedForReview) {
-      return answer.selectedOption !== null ? "marked-answered" : "marked";
+      return "marked-answered";
     }
-    return answer.selectedOption !== null ? "answered" : "not-answered";
+    return "answered";
   };
 
   const calculateProgress = (subject: string) => {
     const subjectQuestions = allQuestions.filter(q => q.subject === subject);
     const answeredQuestions = userAnswers.filter(a => 
-      subjectQuestions.some(q => q.id === a.questionId)
+      subjectQuestions.some(q => q.id === a.questionId) && a.selectedOption !== null
     );
     return (answeredQuestions.length / (subjectQuestions.length || 1)) * 100;
   };
@@ -225,8 +225,8 @@ const Index = () => {
       </header>
 
       <div className="max-w-screen-2xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[320px,1fr] gap-6">
-        <div className="space-y-4 lg:sticky lg:top-[120px] self-start">
-          <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-lg shadow lg:sticky lg:top-[120px] self-start">
+          <div className="p-4">
             <div className="flex items-center gap-4 mb-2">
               <div className="w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 p-[2px]">
                 <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
@@ -288,28 +288,37 @@ const Index = () => {
                   const question = questions[i];
                   const status = question ? getQuestionStatus(question.id) : "not-visited";
                   const answer = userAnswers.find(a => question && a.questionId === question.id);
-                  const isUnanswered = answer && answer.selectedOption === null && !answer.isMarkedForReview;
+                  const isUnanswered = !answer || answer.selectedOption === null;
                   
+                  let bgColor = "bg-gray-200";
+                  let textColor = "text-gray-600";
+                  
+                  if (question) {
+                    if (isUnanswered) {
+                      bgColor = "bg-red-500";
+                      textColor = "text-white";
+                    } else if (answer?.isMarkedForReview) {
+                      bgColor = "bg-purple-400";
+                      textColor = "text-white";
+                    } else {
+                      bgColor = "bg-green-500";
+                      textColor = "text-white";
+                    }
+                  }
+
                   return (
                     <button
                       key={i}
                       className={`
                         relative w-full aspect-square rounded text-sm font-medium transition-colors
                         ${i === currentQuestionIndex ? "ring-2 ring-blue-500" : ""}
-                        ${!question ? "bg-gray-200 text-gray-600" :
-                          isUnanswered ? "bg-red-500 text-white" :
-                          status === "answered" ? "bg-green-500 text-white" :
-                          status === "not-answered" ? "bg-red-500 text-white" :
-                          status === "marked" ? "bg-purple-400 text-white" :
-                          status === "marked-answered" ? "bg-purple-400 text-white" :
-                          "bg-gray-200 text-gray-600"
-                        }
+                        ${bgColor} ${textColor}
                       `}
                       onClick={() => question && setCurrentQuestionIndex(i)}
                       disabled={!question}
                     >
                       {i + 1}
-                      {status === "marked-answered" && (
+                      {answer?.isMarkedForReview && answer.selectedOption !== null && (
                         <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white" />
                       )}
                     </button>
