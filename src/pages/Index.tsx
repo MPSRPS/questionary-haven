@@ -341,7 +341,7 @@ const Index = () => {
                     return (
                       <button
                         key={i}
-                        className="w-full aspect-square rounded text-sm font-medium bg-gray-200 text-gray-600"
+                        className="w-full p-1.5 rounded text-center text-xs font-medium bg-[#F1F1F1] text-gray-600"
                         disabled
                       >
                         {i + 1}
@@ -355,7 +355,7 @@ const Index = () => {
                     <button
                       key={i}
                       className={`
-                        relative w-full aspect-square rounded text-sm font-medium transition-colors
+                        relative w-full p-1.5 rounded text-center text-xs font-medium transition-colors
                         ${i === currentQuestionIndex ? "ring-2 ring-blue-500" : ""}
                         ${status.bgColor} ${status.textColor}
                       `}
