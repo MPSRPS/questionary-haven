@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Timer, ArrowLeft, ArrowRight, Check, Flag, X, Maximize2, Minimize2, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog } from "@/components/ui/dialog";
@@ -17,6 +17,29 @@ interface UserAnswer {
   isMarkedForReview: boolean;
 }
 
+interface SubjectProgress {
+  correct: number;
+  total: number;
+}
+
+interface Results {
+  totalScore: number;
+  correctAnswers: number;
+  wrongAnswers: number;
+  subjectWise: Record<string, SubjectProgress>;
+}
+
+const INITIAL_RESULTS: Results = {
+  totalScore: 0,
+  correctAnswers: 0,
+  wrongAnswers: 0,
+  subjectWise: {
+    Physics: { correct: 0, total: 0 },
+    Chemistry: { correct: 0, total: 0 },
+    Mathematics: { correct: 0, total: 0 },
+  },
+};
+
 const Index = () => {
   const [activeSubject, setActiveSubject] = useState("Physics");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -25,19 +48,14 @@ const Index = () => {
   const [userAnswers, setUserAnswers] = useState<UserAnswer[]>([]);
   const [visitedQuestions, setVisitedQuestions] = useState<Set<number>>(new Set());
   const [showResults, setShowResults] = useState(false);
-  const [results, setResults] = useState({
-    totalScore: 0,
-    correctAnswers: 0,
-    wrongAnswers: 0,
-    subjectWise: {
-      Physics: { correct: 0, total: 0 },
-      Chemistry: { correct: 0, total: 0 },
-      Mathematics: { correct: 0, total: 0 },
-    },
-  });
+  const [results, setResults] = useState<Results>(INITIAL_RESULTS);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  const questions = allQuestions.filter(q => q.subject === activeSubject);
+  const questions = useMemo(() => 
+    allQuestions.filter(q => q.subject === activeSubject),
+    [allQuestions, activeSubject]
+  );
+
   const currentQuestion = questions[currentQuestionIndex];
 
   useEffect(() => {
@@ -57,16 +75,16 @@ const Index = () => {
 
   useEffect(() => {
     const fetchAllQuestions = async () => {
-      const { data, error } = await supabase
-        .from("questions")
-        .select("*");
+      try {
+        const { data, error } = await supabase
+          .from("questions")
+          .select("*");
 
-      if (error) {
+        if (error) throw error;
+        setAllQuestions(data || []);
+      } catch (error) {
         console.error("Error fetching questions:", error);
-        return;
       }
-
-      setAllQuestions(data || []);
     };
 
     fetchAllQuestions();
@@ -78,7 +96,7 @@ const Index = () => {
     }
   }, [currentQuestionIndex, questions]);
 
-  const handleAnswerSelect = (optionIndex: number) => {
+  const handleAnswerSelect = useCallback((optionIndex: number) => {
     setUserAnswers((prev) => {
       const existing = prev.find((a) => a.questionId === currentQuestion.id);
       if (existing) {
@@ -94,9 +112,9 @@ const Index = () => {
         isMarkedForReview: false 
       }];
     });
-  };
+  }, [currentQuestion?.id]);
 
-  const toggleMarkForReview = () => {
+  const toggleMarkForReview = useCallback(() => {
     setUserAnswers((prev) => {
       const existing = prev.find((a) => a.questionId === currentQuestion.id);
       if (existing) {
@@ -112,9 +130,9 @@ const Index = () => {
         isMarkedForReview: true 
       }];
     });
-  };
+  }, [currentQuestion?.id]);
 
-  const getQuestionStatus = (questionId: number) => {
+  const getQuestionStatus = useCallback((questionId: number) => {
     const answer = userAnswers.find((a) => a.questionId === questionId);
     const isVisited = visitedQuestions.has(questionId);
 
@@ -147,17 +165,17 @@ const Index = () => {
       textColor: "text-white",
       showGreenDot: false
     };
-  };
+  }, [userAnswers, visitedQuestions]);
 
-  const calculateProgress = (subject: string) => {
+  const calculateProgress = useCallback((subject: string) => {
     const subjectQuestions = allQuestions.filter(q => q.subject === subject);
     const answeredQuestions = userAnswers.filter(a => 
       subjectQuestions.some(q => q.id === a.questionId) && a.selectedOption !== null
     );
     return (answeredQuestions.length / (subjectQuestions.length || 1)) * 100;
-  };
+  }, [allQuestions, userAnswers]);
 
-  const calculateResults = () => {
+  const calculateResults = useCallback(() => {
     let correct = 0;
     let wrong = 0;
     const subjectResults = {
@@ -168,17 +186,13 @@ const Index = () => {
 
     allQuestions.forEach(question => {
       subjectResults[question.subject as keyof typeof subjectResults].total++;
-    });
-
-    allQuestions.forEach((question) => {
+      
       const answer = userAnswers.find((a) => a.questionId === question.id);
-      if (answer) {
-        if (answer.selectedOption === question.correct_answer - 1) {
-          correct++;
-          subjectResults[question.subject as keyof typeof subjectResults].correct++;
-        } else {
-          wrong++;
-        }
+      if (answer?.selectedOption === question.correct_answer - 1) {
+        correct++;
+        subjectResults[question.subject as keyof typeof subjectResults].correct++;
+      } else if (answer?.selectedOption !== null) {
+        wrong++;
       }
     });
 
@@ -190,16 +204,16 @@ const Index = () => {
       subjectWise: subjectResults,
     });
     setShowResults(true);
-  };
+  }, [allQuestions, userAnswers]);
 
-  const formatTime = (seconds: number) => {
+  const formatTime = useCallback((seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const remainingSeconds = seconds % 60;
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
+  }, []);
 
-  const toggleFullscreen = () => {
+  const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen();
       setIsFullscreen(true);
@@ -207,7 +221,7 @@ const Index = () => {
       document.exitFullscreen();
       setIsFullscreen(false);
     }
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
