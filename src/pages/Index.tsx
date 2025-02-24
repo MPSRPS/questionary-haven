@@ -223,24 +223,8 @@ const Index = () => {
     }
   }, []);
 
-  const getProgressDetails = useCallback(() => {
-    const attempted = userAnswers.filter(a => !a.isMarkedForReview && a.selectedOption !== null).length;
-    const marked = userAnswers.filter(a => a.isMarkedForReview).length;
-    const notAnswered = userAnswers.filter(a => a.selectedOption === null && !a.isMarkedForReview).length;
-    const notVisited = 25 - visitedQuestions.size;
-    const markedAndAnswered = userAnswers.filter(a => a.isMarkedForReview && a.selectedOption !== null).length;
-
-    return {
-      attempted,
-      marked,
-      notAnswered,
-      notVisited,
-      markedAndAnswered
-    };
-  }, [userAnswers, visitedQuestions]);
-
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-screen-2xl mx-auto px-4 py-2 flex justify-between items-center">
           <h1 className="text-xl font-semibold text-blue-600">JEE Prep Master</h1>
@@ -287,8 +271,8 @@ const Index = () => {
         </div>
       </header>
 
-      <div className="max-w-screen-2xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[320px,1fr] gap-0">
-        <div className="bg-white lg:border-r lg:rounded-l-lg lg:rounded-r-none shadow-sm">
+      <div className="max-w-screen-2xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[320px,1fr] gap-6">
+        <div className="bg-white rounded-lg shadow lg:sticky lg:top-[120px] self-start">
           <div className="relative w-full h-[95px] bg-gray-100 border border-gray-300 shadow-md rounded-md p-4 flex items-center">
             <div className="absolute top-[13px] left-[10px] w-[70px] h-[70px] rounded-full bg-gradient-to-r from-blue-500 to-purple-500 p-1 shadow-md">
               <div className="w-full h-full bg-white flex items-center justify-center rounded-full">
@@ -310,94 +294,95 @@ const Index = () => {
             </button>
           </div>
 
-          <div className="p-4 border-b">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-gray-600">{activeSubject} Progress</span>
-              <div className="flex-1 ml-3">
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-blue-500 to-purple-500" 
-                    style={{
-                      width: `${calculateProgress(activeSubject)}%`
-                    }}
-                  />
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-4 border-b">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium text-gray-600">{activeSubject} Progress</span>
+                <div className="flex-1 ml-3">
+                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-blue-500" 
+                      style={{
+                        width: `${calculateProgress(activeSubject)}%`
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-green-600">○</span>
+                  <span className="text-gray-600">{userAnswers.filter(a => 
+                    allQuestions.find(q => q.id === a.questionId)?.subject === activeSubject && 
+                    !a.isMarkedForReview
+                  ).length} Attempted</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-purple-600">○</span>
+                  <span className="text-gray-600">Marked</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-red-600">○</span>
+                  <span className="text-gray-600">Not Answered</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">○</span>
+                  <span className="text-gray-600">25 Not Visited</span>
                 </div>
               </div>
             </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-green-500"></span>
-                <span className="text-gray-600">{getProgressDetails().attempted} Attempted</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-purple-400"></span>
-                <span className="text-gray-600">{getProgressDetails().marked} Marked for Review</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-purple-400"></span>
-                <span className="text-gray-600">{getProgressDetails().markedAndAnswered} Marked & Answered</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-red-500"></span>
-                <span className="text-gray-600">{getProgressDetails().notAnswered} Not Answered</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-gray-300"></span>
-                <span className="text-gray-600">{getProgressDetails().notVisited} Not Visited</span>
-              </div>
-            </div>
-          </div>
 
-          <div className="p-4">
-            <h4 className="font-medium mb-4">Question Palette</h4>
-            <div className="grid grid-cols-5 gap-2">
-              {Array.from({ length: 25 }, (_, i) => {
-                const question = questions[i];
-                if (!question) {
+            <div className="p-4">
+              <h4 className="font-medium mb-4">Question Palette</h4>
+              <div className="grid grid-cols-5 gap-2">
+                {Array.from({ length: 25 }, (_, i) => {
+                  const question = questions[i];
+                  if (!question) {
+                    return (
+                      <button
+                        key={i}
+                        className="w-full p-1.5 rounded text-center text-xs font-medium bg-[#F1F1F1] text-gray-600"
+                        disabled
+                      >
+                        {i + 1}
+                      </button>
+                    );
+                  }
+
+                  const status = getQuestionStatus(question.id);
+
                   return (
                     <button
                       key={i}
-                      className="w-full p-1.5 rounded text-center text-xs font-medium bg-[#F1F1F1] text-gray-600"
-                      disabled
+                      className={`
+                        relative w-full p-1.5 rounded text-center text-xs font-medium transition-colors
+                        ${i === currentQuestionIndex ? "ring-2 ring-blue-500" : ""}
+                        ${status.bgColor} ${status.textColor}
+                      `}
+                      onClick={() => setCurrentQuestionIndex(i)}
                     >
                       {i + 1}
+                      {status.showGreenDot && (
+                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white" />
+                      )}
                     </button>
                   );
-                }
-
-                const status = getQuestionStatus(question.id);
-
-                return (
-                  <button
-                    key={i}
-                    className={`
-                      relative w-full p-1.5 rounded text-center text-xs font-medium transition-colors
-                      ${i === currentQuestionIndex ? "ring-2 ring-blue-500" : ""}
-                      ${status.bgColor} ${status.textColor}
-                    `}
-                    onClick={() => setCurrentQuestionIndex(i)}
-                  >
-                    {i + 1}
-                    {status.showGreenDot && (
-                      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white" />
-                    )}
-                  </button>
-                );
-              })}
+                })}
+              </div>
             </div>
           </div>
 
           <button
-            className="w-full py-3 bg-blue-500 text-white font-medium hover:bg-blue-600 transition-colors"
+            className="w-full py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
             onClick={calculateResults}
           >
             Submit Test
           </button>
         </div>
 
-        <div className="bg-gray-50 lg:rounded-r-lg shadow-sm">
+        <div className="lg:sticky lg:top-[120px] self-start">
           {currentQuestion && (
-            <div>
+            <div className="bg-white rounded-lg shadow">
               <div className="p-6 border-b">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-lg font-medium">Question {currentQuestionIndex + 1}</h2>
@@ -427,53 +412,49 @@ const Index = () => {
                 </div>
               </div>
 
-              <div className="p-4">
-                <div className="flex justify-between mb-4">
+              <div className="p-4 space-y-4">
+                <div className="flex justify-between">
                   <button
-                    className="px-6 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm font-medium inline-flex items-center gap-2"
+                    className="px-6 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm font-medium"
                     onClick={() => setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))}
                     disabled={currentQuestionIndex === 0}
                   >
-                    <ArrowLeft className="w-4 h-4" />
-                    Previous
+                    {"<< Previous"}
                   </button>
                   <button
-                    className="px-6 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm font-medium inline-flex items-center gap-2"
+                    className="px-6 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm font-medium"
                     onClick={() => setCurrentQuestionIndex((prev) => Math.min(questions.length - 1, prev + 1))}
                     disabled={currentQuestionIndex === questions.length - 1}
                   >
-                    Next
-                    <ArrowRight className="w-4 h-4" />
+                    {"Next >>"}
                   </button>
                 </div>
-                <div className="border-t pt-4">
-                  <div className="flex justify-between">
-                    <div className="space-x-3">
-                      <button
-                        className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm font-medium"
-                        onClick={toggleMarkForReview}
-                      >
-                        Mark for Review & Next
-                      </button>
-                      <button
-                        className="px-6 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-sm font-medium"
-                        onClick={() => {
-                          const answer = userAnswers.find(a => a.questionId === currentQuestion.id);
-                          if (answer) {
-                            setUserAnswers(prev => prev.filter(a => a.questionId !== currentQuestion.id));
-                          }
-                        }}
-                      >
-                        Clear Response
-                      </button>
-                    </div>
+                <div className="flex justify-between">
+                  <div className="space-x-3">
                     <button
-                      className="px-6 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm font-medium"
-                      onClick={() => setCurrentQuestionIndex((prev) => Math.min(questions.length - 1, prev + 1))}
+                      className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm font-medium"
+                      onClick={toggleMarkForReview}
                     >
-                      Save & Next
+                      Mark for Review & Next
+                    </button>
+                    <button
+                      className="px-6 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-sm font-medium"
+                      onClick={() => {
+                        const answer = userAnswers.find(a => a.questionId === currentQuestion.id);
+                        if (answer) {
+                          setUserAnswers(prev => prev.filter(a => a.questionId !== currentQuestion.id));
+                        }
+                      }}
+                    >
+                      Clear Response
                     </button>
                   </div>
+                  <button
+                    className="px-6 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm font-medium"
+                    onClick={() => setCurrentQuestionIndex((prev) => Math.min(questions.length - 1, prev + 1))}
+                  >
+                    Save & Next
+                  </button>
                 </div>
               </div>
             </div>
