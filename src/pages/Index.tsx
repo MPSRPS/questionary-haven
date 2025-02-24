@@ -271,194 +271,197 @@ const Index = () => {
         </div>
       </header>
 
-      <div className="max-w-screen-2xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[320px,1fr] gap-6">
-        <div className="bg-white rounded-lg shadow lg:sticky lg:top-[120px] self-start">
-          <div className="relative w-full h-[95px] bg-gray-100 border border-gray-300 shadow-md rounded-md p-4 flex items-center">
-            <div className="absolute top-[13px] left-[10px] w-[70px] h-[70px] rounded-full bg-gradient-to-r from-blue-500 to-purple-500 p-1 shadow-md">
-              <div className="w-full h-full bg-white flex items-center justify-center rounded-full">
-                <User className="w-10 h-10 text-gray-500" />
+      <div className="flex flex-1 h-[84vh] flex-col md:flex-row">
+        <div className="w-full md:w-1/4 bg-white shadow-lg border-r border-gray-200 overflow-hidden">
+          <div className="p-4 flex flex-col h-full">
+            <div className="flex-1 overflow-auto">
+              <div className="relative w-full h-[95px] bg-gray-100 border border-gray-300 shadow-md p-4 flex items-center">
+                <div className="absolute top-[13px] left-[10px] w-[70px] h-[70px] rounded-full bg-gradient-to-r from-blue-500 to-purple-500 p-1 shadow-md">
+                  <div className="w-full h-full bg-white flex items-center justify-center rounded-full">
+                    <User className="w-10 h-10 text-gray-500" />
+                  </div>
+                </div>
+
+                <div className="absolute top-[13px] left-[101px]">
+                  <h3 className="text-lg font-medium text-gray-800 leading-[26px]">
+                    John Doe
+                  </h3>
+                  <p className="text-sm text-gray-500 leading-[22px]">
+                    Roll No: JEE2024001
+                  </p>
+                </div>
+
+                <button className="absolute top-[65px] left-[101px] w-[95px] h-[23px] text-green-800 text-xs font-medium bg-green-100 hover:bg-green-200 active:bg-green-300 flex items-center justify-center rounded-full">
+                  Test in Progress
+                </button>
+              </div>
+
+              <div className="mt-4">
+                <div className="p-4 border-b">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-medium text-gray-600">{activeSubject} Progress</span>
+                    <div className="flex-1 ml-3">
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-blue-500" 
+                          style={{
+                            width: `${calculateProgress(activeSubject)}%`
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="text-green-600">○</span>
+                      <span className="text-gray-600">{userAnswers.filter(a => !a.isMarkedForReview).length} Attempted</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-purple-600">○</span>
+                      <span className="text-gray-600">Marked</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-red-600">○</span>
+                      <span className="text-gray-600">Not Answered</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-400">○</span>
+                      <span className="text-gray-600">25 Not Visited</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4">
+                  <h4 className="font-medium mb-4">Question Palette</h4>
+                  <div className="grid grid-cols-5 gap-2">
+                    {Array.from({ length: 25 }, (_, i) => {
+                      const question = questions[i];
+                      if (!question) {
+                        return (
+                          <button
+                            key={i}
+                            className="w-full p-1.5 rounded text-center text-xs font-medium bg-[#F1F1F1] text-gray-600"
+                            disabled
+                          >
+                            {i + 1}
+                          </button>
+                        );
+                      }
+
+                      const status = getQuestionStatus(question.id);
+
+                      return (
+                        <button
+                          key={i}
+                          className={`
+                            relative w-full p-1.5 rounded text-center text-xs font-medium transition-colors
+                            ${i === currentQuestionIndex ? "ring-2 ring-blue-500" : ""}
+                            ${status.bgColor} ${status.textColor}
+                          `}
+                          onClick={() => setCurrentQuestionIndex(i)}
+                        >
+                          {i + 1}
+                          {status.showGreenDot && (
+                            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
-
-            <div className="absolute top-[13px] left-[101px]">
-              <h3 className="text-lg font-medium text-gray-800 leading-[26px]">
-                John Doe
-              </h3>
-              <p className="text-sm text-gray-500 leading-[22px]">
-                Roll No: JEE2024001
-              </p>
-            </div>
-
-            <button className="absolute top-[65px] left-[101px] w-[95px] h-[23px] text-green-800 text-xs font-medium bg-green-100 hover:bg-green-200 active:bg-green-300 flex items-center justify-center rounded-full">
-              Test in Progress
+            
+            <button
+              className="mt-4 w-full py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
+              onClick={calculateResults}
+            >
+              Submit Test
             </button>
           </div>
-
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-4 border-b">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-gray-600">{activeSubject} Progress</span>
-                <div className="flex-1 ml-3">
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-blue-500" 
-                      style={{
-                        width: `${calculateProgress(activeSubject)}%`
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="text-green-600">○</span>
-                  <span className="text-gray-600">{userAnswers.filter(a => 
-                    allQuestions.find(q => q.id === a.questionId)?.subject === activeSubject && 
-                    !a.isMarkedForReview
-                  ).length} Attempted</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-purple-600">○</span>
-                  <span className="text-gray-600">Marked</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-red-600">○</span>
-                  <span className="text-gray-600">Not Answered</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-400">○</span>
-                  <span className="text-gray-600">25 Not Visited</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4">
-              <h4 className="font-medium mb-4">Question Palette</h4>
-              <div className="grid grid-cols-5 gap-2">
-                {Array.from({ length: 25 }, (_, i) => {
-                  const question = questions[i];
-                  if (!question) {
-                    return (
-                      <button
-                        key={i}
-                        className="w-full p-1.5 rounded text-center text-xs font-medium bg-[#F1F1F1] text-gray-600"
-                        disabled
-                      >
-                        {i + 1}
-                      </button>
-                    );
-                  }
-
-                  const status = getQuestionStatus(question.id);
-
-                  return (
-                    <button
-                      key={i}
-                      className={`
-                        relative w-full p-1.5 rounded text-center text-xs font-medium transition-colors
-                        ${i === currentQuestionIndex ? "ring-2 ring-blue-500" : ""}
-                        ${status.bgColor} ${status.textColor}
-                      `}
-                      onClick={() => setCurrentQuestionIndex(i)}
-                    >
-                      {i + 1}
-                      {status.showGreenDot && (
-                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          <button
-            className="w-full py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
-            onClick={calculateResults}
-          >
-            Submit Test
-          </button>
         </div>
 
-        <div className="lg:sticky lg:top-[120px] self-start">
-          {currentQuestion && (
-            <div className="bg-white rounded-lg shadow">
-              <div className="p-6 border-b">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-lg font-medium">Question {currentQuestionIndex + 1}</h2>
-                  <div className="flex items-center gap-3">
-                    <span className="text-green-600 text-sm">+4</span>
-                    <span className="text-red-600 text-sm">-1</span>
+        <div className="w-full md:w-3/4 p-4 bg-gray-50">
+          <div className="p-4 h-full flex flex-col">
+            {currentQuestion && (
+              <div className="bg-white rounded-lg shadow flex-1">
+                <div className="p-6 border-b">
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-lg font-medium">Question {currentQuestionIndex + 1}</h2>
+                    <div className="flex items-center gap-3">
+                      <span className="text-green-600 text-sm">+4</span>
+                      <span className="text-red-600 text-sm">-1</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <p className="text-gray-800">{currentQuestion.text}</p>
+                    <div className="space-y-3">
+                      {currentQuestion.options.map((option, idx) => (
+                        <button
+                          key={idx}
+                          className={`w-full text-left p-4 rounded border text-sm transition-colors ${
+                            userAnswers.find((a) => a.questionId === currentQuestion.id)?.selectedOption === idx
+                              ? "border-blue-500 bg-blue-50"
+                              : "border-gray-200 hover:bg-gray-50"
+                          }`}
+                          onClick={() => handleAnswerSelect(idx)}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-6">
-                  <p className="text-gray-800">{currentQuestion.text}</p>
-                  <div className="space-y-3">
-                    {currentQuestion.options.map((option, idx) => (
+                <div className="p-4 space-y-4">
+                  <div className="flex justify-between">
+                    <button
+                      className="px-6 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm font-medium"
+                      onClick={() => setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))}
+                      disabled={currentQuestionIndex === 0}
+                    >
+                      {"<< Previous"}
+                    </button>
+                    <button
+                      className="px-6 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm font-medium"
+                      onClick={() => setCurrentQuestionIndex((prev) => Math.min(questions.length - 1, prev + 1))}
+                      disabled={currentQuestionIndex === questions.length - 1}
+                    >
+                      {"Next >>"}
+                    </button>
+                  </div>
+                  <div className="flex justify-between">
+                    <div className="space-x-3">
                       <button
-                        key={idx}
-                        className={`w-full text-left p-4 rounded border text-sm transition-colors ${
-                          userAnswers.find((a) => a.questionId === currentQuestion.id)?.selectedOption === idx
-                            ? "border-blue-500 bg-blue-50"
-                            : "border-gray-200 hover:bg-gray-50"
-                        }`}
-                        onClick={() => handleAnswerSelect(idx)}
+                        className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm font-medium"
+                        onClick={toggleMarkForReview}
                       >
-                        {option}
+                        Mark for Review & Next
                       </button>
-                    ))}
+                      <button
+                        className="px-6 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-sm font-medium"
+                        onClick={() => {
+                          const answer = userAnswers.find(a => a.questionId === currentQuestion.id);
+                          if (answer) {
+                            setUserAnswers(prev => prev.filter(a => a.questionId !== currentQuestion.id));
+                          }
+                        }}
+                      >
+                        Clear Response
+                      </button>
+                    </div>
+                    <button
+                      className="px-6 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm font-medium"
+                      onClick={() => setCurrentQuestionIndex((prev) => Math.min(questions.length - 1, prev + 1))}
+                    >
+                      Save & Next
+                    </button>
                   </div>
                 </div>
               </div>
-
-              <div className="p-4 space-y-4">
-                <div className="flex justify-between">
-                  <button
-                    className="px-6 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm font-medium"
-                    onClick={() => setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))}
-                    disabled={currentQuestionIndex === 0}
-                  >
-                    {"<< Previous"}
-                  </button>
-                  <button
-                    className="px-6 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm font-medium"
-                    onClick={() => setCurrentQuestionIndex((prev) => Math.min(questions.length - 1, prev + 1))}
-                    disabled={currentQuestionIndex === questions.length - 1}
-                  >
-                    {"Next >>"}
-                  </button>
-                </div>
-                <div className="flex justify-between">
-                  <div className="space-x-3">
-                    <button
-                      className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm font-medium"
-                      onClick={toggleMarkForReview}
-                    >
-                      Mark for Review & Next
-                    </button>
-                    <button
-                      className="px-6 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-sm font-medium"
-                      onClick={() => {
-                        const answer = userAnswers.find(a => a.questionId === currentQuestion.id);
-                        if (answer) {
-                          setUserAnswers(prev => prev.filter(a => a.questionId !== currentQuestion.id));
-                        }
-                      }}
-                    >
-                      Clear Response
-                    </button>
-                  </div>
-                  <button
-                    className="px-6 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm font-medium"
-                    onClick={() => setCurrentQuestionIndex((prev) => Math.min(questions.length - 1, prev + 1))}
-                  >
-                    Save & Next
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
