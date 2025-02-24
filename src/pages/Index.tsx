@@ -276,9 +276,9 @@ const Index = () => {
         <div className="w-full md:w-1/4 bg-white shadow-lg border-r border-gray-200 overflow-hidden">
           <div className="p-4 flex flex-col h-full">
             <div className="flex-1 overflow-auto">
-              <div className="relative w-full h-[95px] bg-gray-100 border border-gray-300 shadow-md p-4 flex items-center">
-                <div className="absolute top-[13px] left-[10px] w-[70px] h-[70px] bg-gradient-to-r from-blue-500 to-purple-500 p-1 shadow-md">
-                  <div className="w-full h-full bg-white flex items-center justify-center">
+              <div className="relative w-full h-[95px] bg-gray-100 border border-gray-300 shadow-md rounded-lg p-4 flex items-center">
+                <div className="absolute top-[13px] left-[10px] w-[70px] h-[70px] bg-gradient-to-r from-blue-500 to-purple-500 p-1 shadow-md rounded-full">
+                  <div className="w-full h-full bg-white flex items-center justify-center rounded-full">
                     <User className="w-10 h-10 text-gray-500" />
                   </div>
                 </div>
@@ -292,7 +292,7 @@ const Index = () => {
                   </p>
                 </div>
 
-                <button className="absolute top-[65px] left-[101px] w-[95px] h-[23px] text-green-800 text-xs font-medium bg-green-100 hover:bg-green-200 active:bg-green-300 flex items-center justify-center">
+                <button className="absolute top-[65px] left-[101px] w-[95px] h-[23px] text-green-800 text-xs font-medium bg-green-100 hover:bg-green-200 active:bg-green-300 flex items-center justify-center rounded-full">
                   Test in Progress
                 </button>
               </div>
@@ -302,7 +302,7 @@ const Index = () => {
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-medium text-gray-600">{activeSubject} Progress</span>
                     <div className="flex-1 ml-3">
-                      <div className="h-2 bg-gray-200 overflow-hidden">
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div 
                           className="h-full bg-blue-500" 
                           style={{
@@ -314,19 +314,19 @@ const Index = () => {
                   </div>
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center gap-2">
-                      <span className="text-green-600">○</span>
+                      <span className="w-3 h-3 rounded-full bg-green-500"></span>
                       <span className="text-gray-600">{userAnswers.filter(a => !a.isMarkedForReview).length} Attempted</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-purple-600">○</span>
+                      <span className="w-3 h-3 rounded-full bg-purple-400"></span>
                       <span className="text-gray-600">Marked</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-red-600">○</span>
+                      <span className="w-3 h-3 rounded-full bg-red-500"></span>
                       <span className="text-gray-600">Not Answered</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-400">○</span>
+                      <span className="w-3 h-3 rounded-full bg-gray-300"></span>
                       <span className="text-gray-600">25 Not Visited</span>
                     </div>
                   </div>
@@ -341,7 +341,7 @@ const Index = () => {
                         return (
                           <button
                             key={i}
-                            className="w-full p-1.5 text-center text-xs font-medium bg-[#F1F1F1] text-gray-600"
+                            className="w-full p-1.5 rounded text-center text-xs font-medium bg-[#F1F1F1] text-gray-600"
                             disabled
                           >
                             {i + 1}
@@ -355,7 +355,7 @@ const Index = () => {
                         <button
                           key={i}
                           className={`
-                            relative w-full p-1.5 text-center text-xs font-medium transition-colors
+                            relative w-full p-1.5 rounded text-center text-xs font-medium transition-colors
                             ${i === currentQuestionIndex ? "ring-2 ring-blue-500" : ""}
                             ${status.bgColor} ${status.textColor}
                           `}
@@ -363,7 +363,7 @@ const Index = () => {
                         >
                           {i + 1}
                           {status.showGreenDot && (
-                            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 border-2 border-white" />
+                            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white" />
                           )}
                         </button>
                       );
@@ -374,7 +374,7 @@ const Index = () => {
             </div>
             
             <button
-              className="mt-4 w-full py-3 bg-blue-500 text-white font-medium hover:bg-blue-600 transition-colors"
+              className="mt-4 w-full py-3 bg-blue-500 text-white font-medium hover:bg-blue-600 transition-colors rounded"
               onClick={calculateResults}
             >
               Submit Test
@@ -389,8 +389,8 @@ const Index = () => {
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-lg font-medium">Question {currentQuestionIndex + 1}</h2>
                   <div className="flex items-center gap-3">
-                    <span className="text-green-600 text-sm">+4</span>
-                    <span className="text-red-600 text-sm">-1</span>
+                    <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs">+4</span>
+                    <span className="px-2 py-0.5 bg-red-100 text-red-800 rounded-full text-xs">-1</span>
                   </div>
                 </div>
 
@@ -400,7 +400,7 @@ const Index = () => {
                     {currentQuestion.options.map((option, idx) => (
                       <button
                         key={idx}
-                        className={`w-full text-left p-4 border text-sm transition-colors ${
+                        className={`w-full text-left p-4 border rounded text-sm transition-colors ${
                           userAnswers.find((a) => a.questionId === currentQuestion.id)?.selectedOption === idx
                             ? "border-blue-500 bg-blue-50"
                             : "border-gray-200 hover:bg-gray-50"
@@ -417,14 +417,14 @@ const Index = () => {
               <div className="p-4 mt-auto">
                 <div className="flex justify-between mb-4">
                   <button
-                    className="px-6 py-2 bg-gray-200 text-gray-700 text-sm font-medium"
+                    className="px-6 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded"
                     onClick={() => setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))}
                     disabled={currentQuestionIndex === 0}
                   >
                     Previous
                   </button>
                   <button
-                    className="px-6 py-2 bg-gray-200 text-gray-700 text-sm font-medium"
+                    className="px-6 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded"
                     onClick={() => setCurrentQuestionIndex((prev) => Math.min(questions.length - 1, prev + 1))}
                     disabled={currentQuestionIndex === questions.length - 1}
                   >
@@ -435,13 +435,13 @@ const Index = () => {
                   <div className="flex justify-between">
                     <div className="space-x-3">
                       <button
-                        className="px-6 py-2 bg-blue-500 text-white text-sm font-medium"
+                        className="px-6 py-2 bg-blue-500 text-white text-sm font-medium rounded"
                         onClick={toggleMarkForReview}
                       >
                         Mark for Review & Next
                       </button>
                       <button
-                        className="px-6 py-2 bg-blue-100 text-blue-700 text-sm font-medium"
+                        className="px-6 py-2 bg-blue-100 text-blue-700 text-sm font-medium rounded"
                         onClick={() => {
                           const answer = userAnswers.find(a => a.questionId === currentQuestion.id);
                           if (answer) {
@@ -453,7 +453,7 @@ const Index = () => {
                       </button>
                     </div>
                     <button
-                      className="px-6 py-2 bg-green-500 text-white text-sm font-medium"
+                      className="px-6 py-2 bg-green-500 text-white text-sm font-medium rounded"
                       onClick={() => setCurrentQuestionIndex((prev) => Math.min(questions.length - 1, prev + 1))}
                     >
                       Save & Next
